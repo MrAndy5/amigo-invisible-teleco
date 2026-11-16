@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Amigo Invisible - 1º Máster de Teleco 🎄📡</title>
+
+  <!-- Open Graph Meta Tags for WhatsApp Rich Previews -->
+  <meta property="og:title" content="Amigo Invisible - 1º Máster de Teleco 🎄📡">
+  <meta property="og:description" content="¡Tienes una misión secreta! Abre tu enlace para descubrir a quién te toca regalar.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#090d16">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            teleco: {
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            },
+            circuit: {
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#090d16',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Mobile safe areas */
+    .safe-bottom {
+      padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+    }
+    /* 3D Perspective & Flip Styles */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    /* Ambient high-tech background */
+    .bg-teleco-ambient {
+      background-color: #090d16;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(14, 165, 233, 0.10) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 60%);
+    }
+    /* Custom thin scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+    @keyframes bounceSubtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .animate-bounce-subtle {
+      animation: bounceSubtle 2.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-teleco-ambient text-slate-100 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
+  <!-- Confetti Canvas (Fixed full viewport, pointer-events none) -->
+  <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+  <!-- Global Header -->
+  <header class="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+            Amigo Invisible <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Teleco</span>
+          </h1>
+          <p class="text-xs text-slate-400">1º Máster en Ingeniería de Telecomunicación</p>
+        </div>
+      </div>
+      <div id="header-badge" class="text-xs font-mono text-slate-400 bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-800">
+        Stateless & Privado
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Router Container -->
+  <main class="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 flex flex-col">
+    <!-- View 1: Organizer (Admin) -->
+    <div id="view-organizer" class="space-y-6"></div>
+
+    <!-- View 2: Participant -->
+    <div id="view-participant" class="hidden space-y-6 my-auto"></div>
+
+    <!-- View 3: Error State -->
+    <div id="view-error" class="hidden space-y-6 my-auto"></div>
+  </main>
+
+  <!-- Global Toast Notification -->
+  <div id="toast-container" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-3">
+    <div id="toast-message" class="bg-emerald-500 text-slate-950 font-medium px-4 py-2.5 rounded-xl shadow-xl shadow-emerald-500/20 flex items-center gap-2 text-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+      <span>Enlace copiado al portapapeles</span>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC & CRYPTOGRAPHY ENGINE -->
+  <script>
+    // -------------------------------------------------------------
+    // Helper: HTML Escaping
+    // -------------------------------------------------------------
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // -------------------------------------------------------------
+    // 1. SOLVABILITY & HALL'S MARRIAGE THEOREM ENGINE
+    // -------------------------------------------------------------
+    function checkSolvability(names, exclusions = {}) {
+      const n = names.length;
+      if (n < 3) {
+        return {
+          solvable: false,
+          error: `Se requieren al menos 3 participantes para realizar el sorteo (actualmente hay ${n}).`,
+          adj: []
+        };
+      }
+
+      const nameToIdx = new Map();
+      names.forEach((name, idx) => nameToIdx.set(name, idx));
+
+      const adj = [];
+      for (let i = 0; i < n; i++) {
+        const giverName = names[i];
+        const rawExcl = exclusions[giverName] || [];
+        const exclSet = new Set(rawExcl.filter(ex => nameToIdx.has(ex)).map(ex => nameToIdx.get(ex)));
+        exclSet.add(i); // Self-exclusion
+
+        const validRecipients = [];
+        for (let j = 0; j < n; j++) {
+          if (!exclSet.has(j)) validRecipients.push(j);
+        }
+
+        if (validRecipients.length === 0) {
+          return {
+            solvable: false,
+            error: `El participante '${giverName}' no tiene a quién regalar debido a sus exclusiones. Modifica las restricciones.`,
+            adj: []
+          };
+        }
+        adj.push(validRecipients);
+      }
+
+      // Verify every participant can receive from at least one peer
+      for (let j = 0; j < n; j++) {
+        const hasGiver = adj.some(recipients => recipients.includes(j));
+        if (!hasGiver) {
+          return {
+            solvable: false,
+            error: `El participante '${names[j]}' ha sido excluido por todos los demás compañeros y no puede recibir ningún regalo.`,
+            adj: []
+          };
+        }
+      }
+
+      // Kuhn's Maximum Bipartite Matching Algorithm (O(V * E))
+      const matchV = new Array(n).fill(-1);
+      const matchU = new Array(n).fill(-1);
+
+      function dfs(u, visited) {
+        for (const v of adj[u]) {
+          if (!visited[v]) {
+            visited[v] = true;
+            if (matchV[v] === -1 || dfs(matchV[v], visited)) {
+              matchV[v] = u;
+              matchU[u] = v;
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+
+      for (let u = 0; u < n; u++) {
+        const visited = new Array(n).fill(false);
+        dfs(u, visited);
+      }
+
+      const unmatchedU = [];
+      for (let u = 0; u < n; u++) {
+        if (matchU[u] === -1) unmatchedU.push(u);
+      }
+
+      if (unmatchedU.length === 0) {
+        return { solvable: true, error: null, adj };
+      }
+
+      // Hall's Marriage Theorem Violator Subset Extraction:
+      // Trace alternating tree from unmatched nodes in U
+      const visitedU = new Array(n).fill(false);
+      const visitedV = new Array(n).fill(false);
+      const queue = [...unmatchedU];
+      queue.forEach(u => visitedU[u] = true);
+
+      while (queue.length > 0) {
+        const currU = queue.shift();
+        for (const v of adj[currU]) {
+          if (!visitedV[v]) {
+            visitedV[v] = true;
+            const matchedU = matchV[v];
+            if (matchedU !== -1 && !visitedU[matchedU]) {
+              visitedU[matchedU] = true;
+              queue.push(matchedU);
+            }
+          }
+        }
+      }
+
+      const S = [];
+      const NS = [];
+      for (let i = 0; i < n; i++) {
+        if (visitedU[i]) S.push(names[i]);
+        if (visitedV[i]) NS.push(names[i]);
+      }
+
+      const explanation = `Conflicto de exclusión irresoluble: los participantes [${S.join(', ')}] (${S.length} personas) solo pueden regalar a [${NS.join(', ')}] (${NS.length} personas). Se necesitan al menos ${S.length} destinatarios distintos para un sorteo válido.`;
+
+      return {
+        solvable: false,
+        error: explanation,
+        adj: []
+      };
+    }
+
+    // -------------------------------------------------------------
+    // 2. HYBRID DERANGEMENT GENERATOR (REJECTION + MRV BACKTRACKING)
+    // -------------------------------------------------------------
+    function generateDerangement(names, exclusions = {}, maxRejectionTries = 300) {
+      const solvability = checkSolvability(names, exclusions);
+      if (!solvability.solvable) {
+        throw new Error(solvability.error);
+      }
+
+      const n = names.length;
+      const adj = solvability.adj;
+
+      // Phase 1: Fisher-Yates Uniform Rejection Sampling
+      for (let tryCount = 0; tryCount < maxRejectionTries; tryCount++) {
+        const perm = Array.from({ length: n }, (_, i) => i);
+        for (let i = n - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [perm[i], perm[j]] = [perm[j], perm[i]];
+        }
+
+        let valid = true;
+        for (let u = 0; u < n; u++) {
+          if (!adj[u].includes(perm[u])) {
+            valid = false;
+            break;
+          }
+        }
+
+        if (valid) {
+          const result = {};
+          for (let u = 0; u < n; u++) {
+            result[names[u]] = names[perm[u]];
+          }
+          return result;
+        }
+      }
+
+      // Phase 2: Randomized MRV (Minimum Remaining Values) Backtracking
+      const assignment = new Array(n).fill(-1);
+      const usedV = new Array(n).fill(false);
+
+      function backtrack() {
+        let bestU = -1;
+        let bestCandidates = null;
+
+        for (let u = 0; u < n; u++) {
+          if (assignment[u] === -1) {
+            const cands = adj[u].filter(v => !usedV[v]);
+            if (bestU === -1 || cands.length < bestCandidates.length) {
+              bestU = u;
+              bestCandidates = cands;
+            }
+          }
+        }
+
+        if (bestU === -1) return true;
+        if (!bestCandidates || bestCandidates.length === 0) return false;
+
+        // Shuffle candidates for maximum randomness & fairness
+        for (let i = bestCandidates.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [bestCandidates[i], bestCandidates[j]] = [bestCandidates[j], bestCandidates[i]];
+        }
+
+        for (const v of bestCandidates) {
+          assignment[bestU] = v;
+          usedV[v] = true;
+          if (backtrack()) return true;
+          assignment[bestU] = -1;
+          usedV[v] = false;
+        }
+        return false;
+      }
+
+      if (backtrack()) {
+        const result = {};
+        for (let u = 0; u < n; u++) {
+          result[names[u]] = names[assignment[u]];
+        }
+        return result;
+      }
+
+      throw new Error("No se pudo generar una asignación válida tras la búsqueda exhaustiva.");
+    }
+
+    // -------------------------------------------------------------
+    // 3. CRYPTOGRAPHIC TOKEN PACKING & PARSING
+    // -------------------------------------------------------------
+    function encodeParticipantToken(giver, receiver, event, budget, date) {
+      const payload = JSON.stringify({
+        g: giver,
+        r: receiver,
+        t: receiver,
+        e: event || "Amigo Invisible - 1º Máster de Teleco",
+        b: budget || "",
+        d: date || "",
+        ts: Date.now()
+      });
+
+      const utf8Bytes = new TextEncoder().encode(payload);
+      let checksum = 0;
+      for (let i = 0; i < utf8Bytes.length; i++) {
+        checksum = (checksum + utf8Bytes[i]) % 256;
+      }
+
+      // Packing: [version=1 (1B), checksum (1B), ...utf8Payload]
+      const packed = new Uint8Array(2 + utf8Bytes.length);
+      packed[0] = 1;
+      packed[1] = checksum;
+      packed.set(utf8Bytes, 2);
+
+      let binary = '';
+      for (let i = 0; i < packed.byteLength; i++) {
+        binary += String.fromCharCode(packed[i]);
+      }
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function decodeParticipantToken(token) {
+      try {
+        if (!token || typeof token !== 'string') {
+          return { success: false, error: 'Token vacío o formato inválido.' };
+        }
+        const clean = token.trim();
+        if (!/^[A-Za-z0-9_-]+$/.test(clean)) {
+          return { success: false, error: 'El enlace contiene caracteres no válidos o caracteres corruptos.' };
+        }
+
+        let base64 = clean.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4 !== 0) {
+          base64 += '=';
+        }
+
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+
+        if (bytes.length < 2) {
+          return { success: false, error: 'Enlace incompleto: la longitud de los datos es menor a la cabecera esperada.' };
+        }
+
+        let checksum;
+        let dataBytes;
+
+        if (bytes[0] === 1 && bytes.length >= 3) {
+          checksum = bytes[1];
+          dataBytes = bytes.subarray(2);
+        } else {
+          checksum = bytes[0];
+          dataBytes = bytes.subarray(1);
+        }
+
+        let calcSum = 0;
+        for (let i = 0; i < dataBytes.length; i++) {
+          calcSum = (calcSum + dataBytes[i]) % 256;
+        }
+
+        if (calcSum !== checksum) {
+          return {
+            success: false,
+            error: 'Integridad comprometida: la firma de seguridad no coincide. El enlace ha sido alterado o manipulado.'
+          };
+        }
+
+        const jsonStr = new TextDecoder().decode(dataBytes);
+        const parsed = JSON.parse(jsonStr);
+
+        const giver = parsed.g;
+        const receiver = parsed.r || parsed.t;
+
+        if (!giver || !receiver) {
+          return { success: false, error: 'Carga útil incompleta: faltan campos obligatorios de emisor o receptor.' };
+        }
+
+        return {
+          success: true,
+          giver: giver,
+          receiver: receiver,
+          target: receiver,
+          event: parsed.e || 'Amigo Invisible - 1º Máster de Teleco',
+          budget: parsed.b || '',
+          date: parsed.d || '',
+          ts: parsed.ts || 0
+        };
+      } catch (err) {
+        return { success: false, error: `Error de decodificación: ${err.message}` };
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 4. PURE CANVAS CONFETTI ENGINE (~40 lines, zero dependencies)
+    // -------------------------------------------------------------
+    function launchConfettiCelebration() {
+      const canvas = document.getElementById('confetti-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ['#10b981', '#34d399', '#38bdf8', '#f59e0b', '#ec4899', '#a855f7', '#ffffff'];
+      const particleCount = 110;
+      const particles = [];
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height * 0.55,
+          vx: (Math.random() - 0.5) * 18,
+          vy: (Math.random() - 0.85) * 20,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 12,
+          opacity: 1,
+          decay: Math.random() * 0.015 + 0.008
+        });
+      }
+
+      let animationFrameId;
+      function updateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let activeParticles = 0;
+
+        particles.forEach(p => {
+          p.vy += 0.42; // Gravity
+          p.vx *= 0.98; // Drag
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rotation += p.rotSpeed;
+          p.opacity -= p.decay;
+
+          if (p.opacity > 0 && p.y < canvas.height + 50) {
+            activeParticles++;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.globalAlpha = Math.max(0, p.opacity);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            ctx.restore();
+          }
+        });
+
+        if (activeParticles > 0) {
+          animationFrameId = requestAnimationFrame(updateConfetti);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          cancelAnimationFrame(animationFrameId);
+        }
+      }
+
+      updateConfetti();
+    }
+
+    // -------------------------------------------------------------
+    // 5. CLIPBOARD & TOAST HELPERS (WHATSAPP WEBVIEW OPTIMIZATION)
+    // -------------------------------------------------------------
+    async function copyTextToClipboard(text) {
+      let copied = false;
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          copied = true;
+        } catch (err) {
+          console.warn('navigator.clipboard falló, usando fallback de textarea:', err);
+        }
+      }
+
+      if (!copied) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        textarea.setAttribute('readonly', '');
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+          copied = document.execCommand('copy');
+        } catch (e) {
+          console.error('execCommand copy failed:', e);
+        }
+        document.body.removeChild(textarea);
+      }
+
+      if (copied) {
+        showToast('Enlace copiado al portapapeles ✓');
+      } else {
+        showToast('No se pudo copiar automáticamente. Por favor, copia el enlace manualmente.');
+      }
+      return copied;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-container');
+      const textElem = toast.querySelector('span');
+      if (textElem) textElem.textContent = msg;
+
+      toast.classList.remove('opacity-0', 'translate-y-3');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-3');
+      }, 2500);
+    }
+
+    function triggerHapticFeedback() {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try {
+          navigator.vibrate([40, 50, 40]);
+        } catch (e) {}
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 6. APPLICATION STATE
+    // -------------------------------------------------------------
+    const AppState = {
+      organizer: {
+        participants: [
+          { id: 'p1', name: 'Carlos', exclusions: [] },
+          { id: 'p2', name: 'Lucía', exclusions: [] },
+          { id: 'p3', name: 'David', exclusions: [] },
+          { id: 'p4', name: 'Elena', exclusions: [] }
+        ],
+        bilateralExclusions: true,
+        eventDetails: {
+          title: '1º Máster de Teleco',
+          budget: '15 €',
+          date: 'Cena de Navidad'
+        },
+        drawGenerated: false,
+        generatedLinks: [], // { id, name, url }
+        lastError: null
+      },
+      participant: {
+        giver: '',
+        target: '',
+        event: '',
+        budget: '',
+        date: '',
+        isRevealed: false
+      }
+    };
+
+    // -------------------------------------------------------------
+    // 7. ROUTING & CONTROLLER
+    // -------------------------------------------------------------
+    function getQueryOrHashToken() {
+      // 1. Check URL Fragment (#p=... or bare hash)
+      if (window.location.hash) {
+        const hashStr = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+        const hashParams = new URLSearchParams(hashStr);
+        const token = hashParams.get('p') || hashParams.get('token') || hashParams.get('data');
+        if (token) return token;
+        if (hashStr.length > 20 && !hashStr.includes('=')) return hashStr;
+      }
+
+      // 2. Check Query Parameters (?p=...)
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('p') || urlParams.get('token') || urlParams.get('data');
+    }
+
+    function initRouter() {
+      const token = getQueryOrHashToken();
+      if (token) {
+        handleParticipantRoute(token);
+      } else {
+        handleOrganizerRoute();
+      }
+    }
+
+    function handleParticipantRoute(token) {
+      const result = decodeParticipantToken(token);
+      if (!result.success) {
+        renderErrorView(result.error);
+        return;
+      }
+
+      AppState.participant = {
+        giver: result.giver,
+        target: result.receiver,
+        event: result.event,
+        budget: result.budget,
+        date: result.date,
+        isRevealed: false
+      };
+
+      renderParticipantView();
+    }
+
+    function handleOrganizerRoute() {
+      document.getElementById('view-participant').classList.add('hidden');
+      document.getElementById('view-error').classList.add('hidden');
+      document.getElementById('view-organizer').classList.remove('hidden');
+      renderOrganizerView();
+    }
+
+    function navigateToOrganizer() {
+      history.pushState({}, '', window.location.pathname);
+      AppState.organizer.drawGenerated = false;
+      AppState.organizer.lastError = null;
+      handleOrganizerRoute();
+    }
+
+    // -------------------------------------------------------------
+    // 8. VIEWS RENDERING: ORGANIZER
+    // -------------------------------------------------------------
+    function renderOrganizerView() {
+      const container = document.getElementById('view-organizer');
+      const org = AppState.organizer;
+
+      if (org.drawGenerated) {
+        container.innerHTML = renderDrawResultsHTML(org);
+        bindResultsEvents();
+        return;
+      }
+
+      container.innerHTML = `
+        <!-- Hero Banner -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-900/60 p-5 rounded-2xl border border-slate-800 shadow-xl">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">📡</span>
+            <div>
+              <h2 class="text-lg font-bold text-white">Configurar Sorteo Secreto</h2>
+              <p class="text-xs text-slate-400">Añade los participantes y marca las exclusiones. La pantalla nunca mostrará los resultados al organizador.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Banner (Conditional on unsolvable draw) -->
+        ${org.lastError ? `
+          <div class="bg-rose-950/80 border border-rose-500/50 rounded-2xl p-4 text-rose-200 shadow-xl shadow-rose-950/30">
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-rose-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <div class="space-y-1">
+                <h4 class="font-bold text-rose-100 text-sm">Sorteo imposible con las restricciones actuales</h4>
+                <p class="text-xs text-rose-200 leading-relaxed">${escapeHtml(org.lastError)}</p>
+                <p class="text-[11px] text-rose-300/80 font-mono mt-1">Sugerencia: Desmarca alguna exclusión o añade participantes para romper el ciclo cerrado.</p>
+              </div>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Add Participant Box -->
+        <div class="bg-slate-900/90 rounded-2xl p-4 sm:p-5 border border-slate-800/80 space-y-4">
+          <div class="flex items-center justify-between">
+            <label for="input-participant-name" class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Añadir Compañero/a
+            </label>
+            <span class="text-xs px-2.5 py-0.5 rounded-full font-medium ${org.participants.length >= 3 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
+              ${org.participants.length} participantes (mínimo 3)
+            </span>
+          </div>
+
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <input id="input-participant-name" type="text" maxlength="30" placeholder="Nombre (ej. Lucía, David, Carlos)..."
+                     class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+              <span id="input-error" class="hidden absolute left-0 -bottom-5 text-[11px] text-rose-400"></span>
+            </div>
+            <button id="btn-add-participant" class="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm transition-all flex items-center gap-1.5 shrink-0 shadow-lg shadow-emerald-500/20">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+              <span>Añadir</span>
+            </button>
+          </div>
+
+          <!-- Bilateral Toggle -->
+          <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs">
+            <label for="toggle-bilateral" class="text-slate-400 flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="toggle-bilateral" ${org.bilateralExclusions ? 'checked' : ''} class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-emerald-500/30">
+              <span>Exclusiones mutuas automáticas (útil para parejas y compañeros de piso)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Participants List & Exclusions Accordions -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between px-1">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Lista y Exclusiones</h3>
+            <span class="text-xs text-slate-500">Toca para configurar a quién NO puede regalar</span>
+          </div>
+
+          ${org.participants.length === 0 ? `
+            <div class="text-center py-10 px-4 rounded-2xl border border-dashed border-slate-800 text-slate-500 space-y-2">
+              <span class="text-3xl block">👥</span>
+              <p class="text-sm">No hay participantes todavía</p>
+              <p class="text-xs text-slate-600">Introduce al menos 3 personas para habilitar el sorteo.</p>
+            </div>
+          ` : `
+            <div class="space-y-2.5" id="participants-list-container">
+              ${org.participants.map(p => renderParticipantCardHTML(p, org)).join('')}
+            </div>
+          `}
+        </div>
+
+        <!-- Event Optional Meta (Collapsible) -->
+        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800/80 p-4 transition-all">
+          <summary class="flex items-center justify-between cursor-pointer list-none text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Detalles del Evento (Presupuesto y Fecha)
+            </span>
+            <span class="text-slate-500 group-open:rotate-180 transition-transform">▾</span>
+          </summary>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 mt-2 border-t border-slate-800/60">
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Presupuesto sugerido</label>
+              <input id="input-meta-budget" type="text" value="${escapeHtml(org.eventDetails.budget)}" placeholder="ej. 15 €"
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Fecha o lugar de entrega</label>
+              <input id="input-meta-date" type="text" value="${escapeHtml(org.eventDetails.date)}" placeholder="ej. Cena de Navidad - 20 Dic"
+                     class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+          </div>
+        </details>
+
+        <!-- Generate Draw Action CTA -->
+        <div class="pt-2">
+          <button id="btn-generate-draw" ${org.participants.length < 3 ? 'disabled' : ''}
+                  class="w-full py-4 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 shadow-xl ${org.participants.length >= 3 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-emerald-500/20 active:scale-[0.98]' : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60'}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+            <span>🎲 Generar Sorteo Seguro y Privado</span>
+          </button>
+          <p class="text-[11px] text-center text-slate-500 mt-2">Los emparejamientos se cifrarán individualmente en los enlaces. Nadie verá la tabla de asignaciones.</p>
+        </div>
+      `;
+
+      bindOrganizerEvents();
+    }
+
+    function renderParticipantCardHTML(p, org) {
+      const otherParticipants = org.participants.filter(item => item.id !== p.id);
+      const exclusionCount = p.exclusions.length;
+
+      return `
+        <div class="bg-slate-900/80 rounded-2xl border border-slate-800/90 overflow-hidden transition-all" id="participant-card-${p.id}">
+          <div class="p-3.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700/80 text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0">
+                ${escapeHtml(p.name.slice(0, 2).toUpperCase())}
+              </div>
+              <span class="text-sm font-semibold text-white truncate">${escapeHtml(p.name)}</span>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" data-action="toggle-exclusions-drawer" data-id="${p.id}"
+                      class="text-xs px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${exclusionCount > 0 ? 'bg-rose-500/10 text-rose-300 border-rose-500/30' : 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-white'}">
+                <span>🚫 ${exclusionCount} ${exclusionCount === 1 ? 'exclusión' : 'exclusiones'}</span>
+                <span class="text-[10px]">▾</span>
+              </button>
+              <button type="button" data-action="delete-participant" data-id="${p.id}" title="Eliminar"
+                      class="p-1.5 text-slate-500 hover:text-rose-400 transition-colors rounded-lg hover:bg-rose-500/10">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Collapsible Exclusions Drawer -->
+          <div id="drawer-${p.id}" class="hidden px-4 pb-3 pt-2 bg-slate-950/60 border-t border-slate-800/60 space-y-2">
+            <p class="text-[11px] text-slate-400 font-medium">${escapeHtml(p.name)} <span class="text-rose-400">NO puede regalar a:</span></p>
+            
+            ${otherParticipants.length === 0 ? `
+              <p class="text-[11px] text-slate-500 italic">No hay otros participantes añadidos aún.</p>
+            ` : `
+              <div class="flex flex-wrap gap-1.5">
+                ${otherParticipants.map(other => {
+                  const isExcluded = p.exclusions.includes(other.id);
+                  return `
+                    <button type="button" data-action="toggle-exclusion" data-source="${p.id}" data-target="${other.id}"
+                            class="text-xs px-2.5 py-1 rounded-lg border font-medium transition-all flex items-center gap-1 ${isExcluded ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 ring-1 ring-rose-500/20' : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-200'}">
+                      ${isExcluded ? '✕ ' : '+ '} ${escapeHtml(other.name)}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDrawResultsHTML(org) {
+      return `
+        <div class="space-y-6">
+          <!-- Success Banner -->
+          <div class="bg-gradient-to-br from-emerald-950/90 to-slate-900 p-5 rounded-2xl border border-emerald-500/40 shadow-xl space-y-2">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">🎉</span>
+              <div>
+                <h2 class="text-base font-bold text-emerald-200">¡Sorteo Generado con Éxito!</h2>
+                <p class="text-xs text-emerald-300/80">Los emparejamientos están cifrados y listos para distribuir.</p>
+              </div>
+            </div>
+            <div class="p-3 bg-slate-950/60 rounded-xl border border-emerald-500/20 text-xs text-slate-300 flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span><strong>Privacidad total:</strong> Ni tú ni nadie puede ver las asignaciones en esta pantalla. Envía a cada compañero su enlace personal.</span>
+            </div>
+          </div>
+
+          <!-- Batch Actions -->
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Enlaces Personales (${org.generatedLinks.length})</h3>
+            <button id="btn-copy-all" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span>Copiar Todos</span>
+            </button>
+          </div>
+
+          <!-- Link Cards List: ZERO RECIPIENT NAMES RENDERED -->
+          <div class="space-y-3">
+            ${org.generatedLinks.map(item => `
+              <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-xs flex items-center justify-center">
+                      ${escapeHtml(item.name.slice(0, 2).toUpperCase())}
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-white">${escapeHtml(item.name)}</h4>
+                      <p class="text-[11px] text-slate-500 font-mono truncate max-w-[200px] sm:max-w-xs">${escapeHtml(item.url)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons Row -->
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <button type="button" data-action="copy-link" data-url="${escapeHtml(item.url)}"
+                          class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-semibold text-white border border-slate-700 flex items-center justify-center gap-1.5 transition-all">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                    <span>Copiar Enlace</span>
+                  </button>
+
+                  <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(getWhatsAppShareMessage(item.name, item.url, org.eventDetails))}"
+                     target="_blank" rel="noopener noreferrer"
+                     class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-xs font-semibold text-white flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/20 transition-all">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                    <span>WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Reset Button -->
+          <div class="pt-4 text-center">
+            <button id="btn-reset-draw" class="text-xs text-slate-400 hover:text-rose-400 transition-colors inline-flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              <span>Reiniciar y editar participantes</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function getWhatsAppShareMessage(name, url, meta) {
+      let msg = `🎄 *Amigo Invisible - 1º Máster de Teleco* 📡\n\n`;
+      msg += `¡Hola *${name}*! Ya se ha realizado el sorteo.\n\n`;
+      msg += `Descubre a quién te toca regalar en tu enlace secreto:\n👉 ${url}\n\n`;
+      if (meta.budget) msg += `💰 *Presupuesto sugerido:* ${meta.budget}\n`;
+      if (meta.date) msg += `📅 *Fecha / Lugar:* ${meta.date}\n`;
+      msg += `\n_¡Recuerda mantener el secreto hasta el día de la entrega!_ 🤫`;
+      return msg;
+    }
+
+    // -------------------------------------------------------------
+    // 9. ORGANIZER EVENTS BINDING
+    // -------------------------------------------------------------
+    function bindOrganizerEvents() {
+      const org = AppState.organizer;
+
+      // Add participant button & enter key
+      const nameInput = document.getElementById('input-participant-name');
+      const addBtn = document.getElementById('btn-add-participant');
+
+      function handleAdd() {
+        if (!nameInput) return;
+        const name = nameInput.value.trim();
+        const errSpan = document.getElementById('input-error');
+
+        if (!name) return;
+
+        // Duplicate check
+        const exists = org.participants.some(p => p.name.toLowerCase() === name.toLowerCase());
+        if (exists) {
+          if (errSpan) {
+            errSpan.textContent = 'Ya existe un participante con este nombre.';
+            errSpan.classList.remove('hidden');
+          }
+          return;
+        }
+
+        if (errSpan) errSpan.classList.add('hidden');
+        const newId = 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        org.participants.push({ id: newId, name: name, exclusions: [] });
+        org.lastError = null;
+        renderOrganizerView();
+      }
+
+      if (addBtn) addBtn.onclick = handleAdd;
+      if (nameInput) {
+        nameInput.onkeydown = (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAdd();
+          }
+        };
+      }
+
+      // Bilateral exclusions toggle
+      const bilateralToggle = document.getElementById('toggle-bilateral');
+      if (bilateralToggle) {
+        bilateralToggle.onchange = (e) => {
+          org.bilateralExclusions = e.target.checked;
+        };
+      }
+
+      // Metadata inputs
+      const budgetInput = document.getElementById('input-meta-budget');
+      if (budgetInput) {
+        budgetInput.oninput = (e) => { org.eventDetails.budget = e.target.value; };
+      }
+      const dateInput = document.getElementById('input-meta-date');
+      if (dateInput) {
+        dateInput.oninput = (e) => { org.eventDetails.date = e.target.value; };
+      }
+
+      // Delegated events for participant list
+      const listContainer = document.getElementById('participants-list-container');
+      if (listContainer) {
+        listContainer.onclick = (e) => {
+          const target = e.target.closest('[data-action]');
+          if (!target) return;
+
+          const action = target.getAttribute('data-action');
+          if (action === 'delete-participant') {
+            const id = target.getAttribute('data-id');
+            org.participants = org.participants.filter(p => p.id !== id);
+            // Clean up any exclusions pointing to deleted participant
+            org.participants.forEach(p => {
+              p.exclusions = p.exclusions.filter(exId => exId !== id);
+            });
+            org.lastError = null;
+            renderOrganizerView();
+          } else if (action === 'toggle-exclusions-drawer') {
+            const id = target.getAttribute('data-id');
+            const drawer = document.getElementById(`drawer-${id}`);
+            if (drawer) {
+              drawer.classList.toggle('hidden');
+            }
+          } else if (action === 'toggle-exclusion') {
+            const sourceId = target.getAttribute('data-source');
+            const targetId = target.getAttribute('data-target');
+            const sourceP = org.participants.find(p => p.id === sourceId);
+            const targetP = org.participants.find(p => p.id === targetId);
+
+            if (sourceP) {
+              const idx = sourceP.exclusions.indexOf(targetId);
+              if (idx >= 0) {
+                sourceP.exclusions.splice(idx, 1);
+                if (org.bilateralExclusions && targetP) {
+                  const rIdx = targetP.exclusions.indexOf(sourceId);
+                  if (rIdx >= 0) targetP.exclusions.splice(rIdx, 1);
+                }
+              } else {
+                sourceP.exclusions.push(targetId);
+                if (org.bilateralExclusions && targetP && !targetP.exclusions.includes(sourceId)) {
+                  targetP.exclusions.push(sourceId);
+                }
+              }
+              org.lastError = null;
+              renderOrganizerView();
+              // Re-open current drawer
+              const currentDrawer = document.getElementById(`drawer-${sourceId}`);
+              if (currentDrawer) currentDrawer.classList.remove('hidden');
+            }
+          }
+        };
+      }
+
+      // Generate Draw button
+      const genBtn = document.getElementById('btn-generate-draw');
+      if (genBtn) {
+        genBtn.onclick = () => {
+          if (org.participants.length < 3) return;
+
+          // Map participant ids to names for derangement algorithm
+          const idToName = new Map();
+          const nameToId = new Map();
+          org.participants.forEach(p => {
+            idToName.set(p.id, p.name);
+            nameToId.set(p.name, p.id);
+          });
+
+          const names = org.participants.map(p => p.name);
+          const exclusionsByName = {};
+          org.participants.forEach(p => {
+            exclusionsByName[p.name] = p.exclusions
+              .map(exId => idToName.get(exId))
+              .filter(Boolean);
+          });
+
+          try {
+            const drawResult = generateDerangement(names, exclusionsByName);
+
+            // Construct bearer token URLs
+            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            const links = [];
+
+            for (const p of org.participants) {
+              const giverName = p.name;
+              const receiverName = drawResult[giverName];
+              const token = encodeParticipantToken(
+                giverName,
+                receiverName,
+                org.eventDetails.title,
+                org.eventDetails.budget,
+                org.eventDetails.date
+              );
+              // Primary URL routing uses fragment `#p=` for zero server log leakage
+              const participantUrl = `${baseUrl}#p=${token}`;
+              links.push({
+                id: p.id,
+                name: giverName,
+                token: token,
+                url: participantUrl
+              });
+            }
+
+            org.generatedLinks = links;
+            org.drawGenerated = true;
+            org.lastError = null;
+            renderOrganizerView();
+          } catch (err) {
+            org.lastError = err.message;
+            renderOrganizerView();
+          }
+        };
+      }
+    }
+
+    function bindResultsEvents() {
+      const org = AppState.organizer;
+
+      // Reset button
+      const resetBtn = document.getElementById('btn-reset-draw');
+      if (resetBtn) {
+        resetBtn.onclick = () => {
+          org.drawGenerated = false;
+          org.generatedLinks = [];
+          org.lastError = null;
+          renderOrganizerView();
+        };
+      }
+
+      // Copy all button
+      const copyAllBtn = document.getElementById('btn-copy-all');
+      if (copyAllBtn) {
+        copyAllBtn.onclick = () => {
+          let batchText = `🎄 *Amigo Invisible - 1º Máster de Teleco* 📡\n`;
+          if (org.eventDetails.budget) batchText += `Presupuesto: ${org.eventDetails.budget}\n`;
+          if (org.eventDetails.date) batchText += `Fecha: ${org.eventDetails.date}\n`;
+          batchText += `\nEnlaces personales para cada compañero:\n`;
+          org.generatedLinks.forEach(item => {
+            batchText += `\n• *${item.name}*: ${item.url}`;
+          });
+          batchText += `\n\n¡Cada uno debe abrir solo su propio enlace para mantener el secreto! 🤫`;
+          copyTextToClipboard(batchText);
+        };
+      }
+
+      // Copy individual link buttons
+      const copyButtons = document.querySelectorAll('[data-action="copy-link"]');
+      copyButtons.forEach(btn => {
+        btn.onclick = () => {
+          const url = btn.getAttribute('data-url');
+          copyTextToClipboard(url);
+          const originalText = btn.innerHTML;
+          btn.innerHTML = `
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>¡Copiado!</span>
+          `;
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+          }, 2000);
+        };
+      });
+    }
+
+    // -------------------------------------------------------------
+    // 10. VIEWS RENDERING: PARTICIPANT
+    // -------------------------------------------------------------
+    function renderParticipantView() {
+      const container = document.getElementById('view-participant');
+      const part = AppState.participant;
+
+      container.classList.remove('hidden');
+      document.getElementById('view-organizer').classList.add('hidden');
+      document.getElementById('view-error').classList.add('hidden');
+
+      container.innerHTML = `
+        <div class="space-y-6 max-w-md mx-auto w-full">
+          <!-- Participant Header -->
+          <div class="text-center space-y-1">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              🎄 1º Máster de Teleco 📡
+            </span>
+            <h2 class="text-2xl font-black text-white tracking-tight pt-1">
+              ¡Hola, <span class="text-emerald-400">${escapeHtml(part.giver)}</span>!
+            </h2>
+            <p class="text-xs text-slate-400">Tu amigo invisible asignado te está esperando.</p>
+          </div>
+
+          <!-- Event Details Card -->
+          ${(part.budget || part.date) ? `
+            <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-800 text-xs flex justify-around text-slate-300 font-medium">
+              ${part.budget ? `<span class="flex items-center gap-1.5"><span class="text-amber-400">💰</span> Presupuesto: ${escapeHtml(part.budget)}</span>` : ''}
+              ${part.date ? `<span class="flex items-center gap-1.5"><span class="text-emerald-400">📅</span> ${escapeHtml(part.date)}</span>` : ''}
+            </div>
+          ` : ''}
+
+          <!-- Interactive Reveal 3D Card -->
+          <div class="perspective-1000 w-full min-h-[320px]">
+            <div id="card-flipper" class="relative w-full h-full transform-style-3d transition-transform duration-700 ease-out ${part.isRevealed ? 'rotate-y-180' : ''}">
+              
+              <!-- Card Front: Mystery Gift Box (Unrevealed) -->
+              <div class="backface-hidden w-full bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl border border-slate-800 p-6 flex flex-col items-center justify-center text-center space-y-6 shadow-2xl relative overflow-hidden">
+                <div class="absolute inset-0 bg-radial-teleco opacity-40 pointer-events-none"></div>
+
+                <!-- Pulsing Gift Icon with Aura -->
+                <div class="relative group cursor-pointer" id="gift-icon-container">
+                  <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-bounce-subtle">
+                    <span class="text-5xl select-none">🎁</span>
+                  </div>
+                  <div class="absolute -inset-2 bg-emerald-500/20 rounded-3xl blur-xl -z-10 animate-pulse"></div>
+                </div>
+
+                <div class="space-y-2">
+                  <h3 class="text-base font-bold text-white">Misión Asignada</h3>
+                  <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+                    Toca el botón para abrir tu regalo digital y revelar tu destinatario secreto.
+                  </p>
+                </div>
+
+                <button id="btn-reveal-target" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-base transition-all transform active:scale-95 shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <span>Descubrir mi Amigo Invisible</span>
+                </button>
+              </div>
+
+              <!-- Card Back: Target Friend Revealed -->
+              <div class="backface-hidden rotate-y-180 absolute inset-0 w-full h-full bg-gradient-to-b from-slate-900 via-circuit-900 to-slate-950 rounded-3xl border-2 border-emerald-500/60 p-6 flex flex-col items-center justify-between text-center shadow-2xl shadow-emerald-500/20">
+                <div class="space-y-1 pt-2">
+                  <span class="text-xs uppercase font-bold tracking-widest text-emerald-400">
+                    ✨ Te ha tocado regalar a ✨
+                  </span>
+                </div>
+
+                <!-- Glowing Revealed Name -->
+                <div class="py-6 space-y-2">
+                  <div class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-200 to-teal-200 tracking-tight drop-shadow-md">
+                    ${escapeHtml(part.target)}
+                  </div>
+                  <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold">
+                    🤫 ¡Guarda el secreto!
+                  </div>
+                </div>
+
+                <!-- Privacy Conceal Button -->
+                <div class="w-full space-y-2 pt-2">
+                  <button id="btn-conceal-target" class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-semibold text-slate-300 transition-all flex items-center justify-center gap-1.5 border border-slate-700">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                    <span>Ocultar nombre de nuevo (Modo Privacidad)</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Footer Action -->
+          <div class="text-center pt-2">
+            <button id="btn-go-organizer" class="text-xs text-slate-500 hover:text-emerald-400 transition-colors">
+              ¿Quieres organizar otro sorteo? Ir al inicio
+            </button>
+          </div>
+        </div>
+      `;
+
+      bindParticipantEvents();
+    }
+
+    function bindParticipantEvents() {
+      const flipper = document.getElementById('card-flipper');
+      const revealBtn = document.getElementById('btn-reveal-target');
+      const giftContainer = document.getElementById('gift-icon-container');
+      const concealBtn = document.getElementById('btn-conceal-target');
+      const goOrgBtn = document.getElementById('btn-go-organizer');
+
+      function triggerReveal() {
+        if (!AppState.participant.isRevealed) {
+          AppState.participant.isRevealed = true;
+          if (flipper) flipper.classList.add('rotate-y-180');
+          triggerHapticFeedback();
+          launchConfettiCelebration();
+        }
+      }
+
+      if (revealBtn) revealBtn.onclick = triggerReveal;
+      if (giftContainer) giftContainer.onclick = triggerReveal;
+
+      if (concealBtn) {
+        concealBtn.onclick = () => {
+          AppState.participant.isRevealed = false;
+          if (flipper) flipper.classList.remove('rotate-y-180');
+        };
+      }
+
+      if (goOrgBtn) {
+        goOrgBtn.onclick = () => {
+          navigateToOrganizer();
+        };
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 11. VIEWS RENDERING: CORRUPTED / TAMPERED TOKEN ERROR
+    // -------------------------------------------------------------
+    function renderErrorView(message) {
+      const container = document.getElementById('view-error');
+      container.classList.remove('hidden');
+      document.getElementById('view-organizer').classList.add('hidden');
+      document.getElementById('view-participant').classList.add('hidden');
+
+      container.innerHTML = `
+        <div class="max-w-md mx-auto w-full bg-slate-900/90 rounded-3xl border border-rose-500/40 p-6 sm:p-8 text-center space-y-5 shadow-2xl">
+          <div class="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center justify-center mx-auto text-3xl">
+            ⚠️
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-lg font-bold text-white">Enlace no válido o dañado</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              ${escapeHtml(message || 'No se ha podido leer la información de tu amigo invisible. El enlace puede haber sido copiado incompleto o manipulado.')}
+            </p>
+          </div>
+          <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+            💡 <strong>¿Qué hacer?</strong> Pídele al organizador del sorteo que te reenvíe tu enlace personal por WhatsApp.
+          </div>
+          <button id="btn-error-go-home" class="w-full py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition-all border border-slate-700">
+            Volver a la página principal
+          </button>
+        </div>
+      `;
+
+      const homeBtn = document.getElementById('btn-error-go-home');
+      if (homeBtn) {
+        homeBtn.onclick = () => {
+          navigateToOrganizer();
+        };
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 12. INITIALIZATION & HASHCHANGE LISTENER
+    // -------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', initRouter);
+    window.addEventListener('hashchange', initRouter);
+  </script>
+</body>
+</html>

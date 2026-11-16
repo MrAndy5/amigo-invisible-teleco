@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Runner - Amigo Invisible Teleco 🧪</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #090d16; color: #f1f5f9; font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body class="p-6 max-w-4xl mx-auto space-y-6">
+  <div class="border-b border-slate-800 pb-4 flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-white flex items-center gap-2">
+        <span class="text-emerald-400">⚡</span> Test Suite Visual Runner
+      </h1>
+      <p class="text-xs text-slate-400">Verificación automatizada en navegador para Amigo Invisible Teleco</p>
+    </div>
+    <div id="status-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+      Ejecutando pruebas...
+    </div>
+  </div>
+
+  <!-- Summary Statistics -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+      <div class="text-xs text-slate-400">Pruebas Totales</div>
+      <div id="stat-total" class="text-2xl font-bold text-white">0</div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+      <div class="text-xs text-slate-400">Superadas (Pass)</div>
+      <div id="stat-passed" class="text-2xl font-bold text-emerald-400">0</div>
+    </div>
+    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+      <div class="text-xs text-slate-400">Fallidas (Fail)</div>
+      <div id="stat-failed" class="text-2xl font-bold text-rose-400">0</div>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800">
+    <div id="progress-bar" class="bg-emerald-500 h-2.5 transition-all duration-300" style="width: 0%"></div>
+  </div>
+
+  <!-- Test Results Log -->
+  <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 space-y-2" id="results-log"></div>
+
+  <script>
+    // -------------------------------------------------------------
+    // Core Algorithmic & Cryptographic Implementation
+    // -------------------------------------------------------------
+    function checkSolvability(names, exclusions = {}) {
+      const n = names.length;
+      if (n < 3) {
+        return { solvable: false, error: `Se requieren al menos 3 participantes (actualmente hay ${n}).` };
+      }
+      const nameToIdx = new Map();
+      names.forEach((name, idx) => nameToIdx.set(name, idx));
+
+      const adj = [];
+      for (let i = 0; i < n; i++) {
+        const giverName = names[i];
+        const rawExcl = exclusions[giverName] || [];
+        const exclSet = new Set(rawExcl.filter(ex => nameToIdx.has(ex)).map(ex => nameToIdx.get(ex)));
+        exclSet.add(i);
+        const valid = [];
+        for (let j = 0; j < n; j++) {
+          if (!exclSet.has(j)) valid.push(j);
+        }
+        if (valid.length === 0) {
+          return { solvable: false, error: `El participante '${giverName}' no tiene a quién regalar debido a sus exclusiones.` };
+        }
+        adj.push(valid);
+      }
+
+      for (let j = 0; j < n; j++) {
+        const hasGiver = adj.some(recipients => recipients.includes(j));
+        if (!hasGiver) {
+          return { solvable: false, error: `El participante '${names[j]}' ha sido excluido por todos los demás y no puede recibir regalos.` };
+        }
+      }
+
+      const matchV = new Array(n).fill(-1);
+      const matchU = new Array(n).fill(-1);
+
+      function dfs(u, visited) {
+        for (const v of adj[u]) {
+          if (!visited[v]) {
+            visited[v] = true;
+            if (matchV[v] === -1 || dfs(matchV[v], visited)) {
+              matchV[v] = u;
+              matchU[u] = v;
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+
+      for (let u = 0; u < n; u++) {
+        const visited = new Array(n).fill(false);
+        dfs(u, visited);
+      }
+
+      const unmatchedU = [];
+      for (let u = 0; u < n; u++) {
+        if (matchU[u] === -1) unmatchedU.push(u);
+      }
+
+      if (unmatchedU.length === 0) {
+        return { solvable: true, adj };
+      }
+
+      const visitedU = new Array(n).fill(false);
+      const visitedV = new Array(n).fill(false);
+      const queue = [...unmatchedU];
+      queue.forEach(u => visitedU[u] = true);
+
+      while (queue.length > 0) {
+        const currU = queue.shift();
+        for (const v of adj[currU]) {
+          if (!visitedV[v]) {
+            visitedV[v] = true;
+            const matchedU = matchV[v];
+            if (matchedU !== -1 && !visitedU[matchedU]) {
+              visitedU[matchedU] = true;
+              queue.push(matchedU);
+            }
+          }
+        }
+      }
+
+      const S = [];
+      const NS = [];
+      for (let i = 0; i < n; i++) {
+        if (visitedU[i]) S.push(names[i]);
+        if (visitedV[i]) NS.push(names[i]);
+      }
+
+      return {
+        solvable: false,
+        error: `Conflicto de exclusión irresoluble: los participantes [${S.join(', ')}] (${S.length} personas) solo pueden regalar a [${NS.join(', ')}] (${NS.length} personas). Se necesitan al menos ${S.length} destinatarios posibles.`
+      };
+    }
+
+    function generateDerangement(names, exclusions = {}, maxRejectionTries = 300) {
+      const solvability = checkSolvability(names, exclusions);
+      if (!solvability.solvable) {
+        throw new Error(solvability.error);
+      }
+      const n = names.length;
+      const adj = solvability.adj;
+
+      for (let tryCount = 0; tryCount < maxRejectionTries; tryCount++) {
+        const perm = Array.from({ length: n }, (_, i) => i);
+        for (let i = n - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [perm[i], perm[j]] = [perm[j], perm[i]];
+        }
+        let valid = true;
+        for (let u = 0; u < n; u++) {
+          if (!adj[u].includes(perm[u])) {
+            valid = false;
+            break;
+          }
+        }
+        if (valid) {
+          const result = {};
+          for (let u = 0; u < n; u++) {
+            result[names[u]] = names[perm[u]];
+          }
+          return result;
+        }
+      }
+
+      const assignment = new Array(n).fill(-1);
+      const usedV = new Array(n).fill(false);
+
+      function backtrack() {
+        let bestU = -1;
+        let bestCandidates = null;
+        for (let u = 0; u < n; u++) {
+          if (assignment[u] === -1) {
+            const cands = adj[u].filter(v => !usedV[v]);
+            if (bestU === -1 || cands.length < bestCandidates.length) {
+              bestU = u;
+              bestCandidates = cands;
+            }
+          }
+        }
+        if (bestU === -1) return true;
+        if (bestCandidates.length === 0) return false;
+
+        for (let i = bestCandidates.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [bestCandidates[i], bestCandidates[j]] = [bestCandidates[j], bestCandidates[i]];
+        }
+
+        for (const v of bestCandidates) {
+          assignment[bestU] = v;
+          usedV[v] = true;
+          if (backtrack()) return true;
+          assignment[bestU] = -1;
+          usedV[v] = false;
+        }
+        return false;
+      }
+
+      if (backtrack()) {
+        const result = {};
+        for (let u = 0; u < n; u++) {
+          result[names[u]] = names[assignment[u]];
+        }
+        return result;
+      }
+      throw new Error("No se pudo generar una asignación válida.");
+    }
+
+    function encodePayload(giver, receiver, event = "1º Máster Teleco", budget = "", date = "") {
+      const payload = JSON.stringify({
+        g: giver,
+        r: receiver,
+        t: receiver,
+        e: event,
+        b: budget,
+        d: date,
+        ts: Date.now()
+      });
+      const utf8Bytes = new TextEncoder().encode(payload);
+      let checksum = 0;
+      for (let i = 0; i < utf8Bytes.length; i++) checksum = (checksum + utf8Bytes[i]) % 256;
+      const packed = new Uint8Array(2 + utf8Bytes.length);
+      packed[0] = 1;
+      packed[1] = checksum;
+      packed.set(utf8Bytes, 2);
+      let binary = '';
+      for (let i = 0; i < packed.byteLength; i++) binary += String.fromCharCode(packed[i]);
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function decodePayload(token) {
+      try {
+        if (!token || typeof token !== 'string') return { success: false, error: 'Token vacío' };
+        const clean = token.trim();
+        if (!/^[A-Za-z0-9_-]+$/.test(clean)) return { success: false, error: 'Caracteres inválidos' };
+        let base64 = clean.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4 !== 0) base64 += '=';
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        if (bytes.length < 2) return { success: false, error: 'Token truncado' };
+
+        let checksum, dataBytes;
+        if (bytes[0] === 1 && bytes.length >= 3) {
+          checksum = bytes[1];
+          dataBytes = bytes.subarray(2);
+        } else {
+          checksum = bytes[0];
+          dataBytes = bytes.subarray(1);
+        }
+
+        let calcSum = 0;
+        for (let i = 0; i < dataBytes.length; i++) calcSum = (calcSum + dataBytes[i]) % 256;
+        if (calcSum !== checksum) return { success: false, error: 'Firma manipulada' };
+
+        const parsed = JSON.parse(new TextDecoder().decode(dataBytes));
+        const giver = parsed.g;
+        const receiver = parsed.r || parsed.t;
+        if (!giver || !receiver) return { success: false, error: 'Campos incompletos' };
+        return {
+          success: true,
+          giver,
+          receiver,
+          target: receiver,
+          event: parsed.e || '',
+          budget: parsed.b || '',
+          date: parsed.d || ''
+        };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Test Runner Suite Definitions
+    // -------------------------------------------------------------
+    const tests = [
+      {
+        name: "Suite 1: Cero auto-asignaciones en 500 sorteos (N=5)",
+        fn: () => {
+          const names = ['Ana', 'Bob', 'Carlos', 'Diana', 'Elena'];
+          for (let i = 0; i < 500; i++) {
+            const draw = generateDerangement(names, {});
+            for (const [g, r] of Object.entries(draw)) {
+              if (g === r) throw new Error(`Auto-asignación detectada: ${g} -> ${r}`);
+            }
+          }
+        }
+      },
+      {
+        name: "Suite 1: Emparejamiento biyectivo perfecto (1 regalo por persona)",
+        fn: () => {
+          const names = ['Ana', 'Bob', 'Carlos', 'Diana', 'Elena', 'Fernando'];
+          const draw = generateDerangement(names, {});
+          const receivers = Object.values(draw);
+          if (new Set(receivers).size !== names.length) throw new Error("Receptor duplicado");
+          names.forEach(n => {
+            if (!receivers.includes(n)) throw new Error(`Participante ${n} sin regalo`);
+          });
+        }
+      },
+      {
+        name: "Suite 2: Exclusión mutua de parejas (Ana <-> Bob)",
+        fn: () => {
+          const names = ['Ana', 'Bob', 'Carlos', 'Diana'];
+          const excl = { 'Ana': ['Bob'], 'Bob': ['Ana'] };
+          for (let i = 0; i < 200; i++) {
+            const draw = generateDerangement(names, excl);
+            if (draw['Ana'] === 'Bob' || draw['Bob'] === 'Ana') throw new Error("Exclusión de pareja violada");
+          }
+        }
+      },
+      {
+        name: "Suite 2: Tríada de compañeros de piso con exclusión mutua",
+        fn: () => {
+          const names = ['A', 'B', 'C', 'D', 'E', 'F'];
+          const excl = { 'A': ['B', 'C'], 'B': ['A', 'C'], 'C': ['A', 'B'] };
+          for (let i = 0; i < 200; i++) {
+            const draw = generateDerangement(names, excl);
+            if (['B', 'C'].includes(draw['A']) || ['A', 'C'].includes(draw['B']) || ['A', 'B'].includes(draw['C'])) {
+              throw new Error("Exclusión de compañeros violada");
+            }
+          }
+        }
+      },
+      {
+        name: "Suite 3: Detección de N < 3 participantes",
+        fn: () => {
+          const res = checkSolvability(['A', 'B'], {});
+          if (res.solvable) throw new Error("Debe fallar con N < 3");
+          if (!res.error.includes("al menos 3")) throw new Error("Mensaje incorrecto");
+        }
+      },
+      {
+        name: "Suite 3: Detección de cuello de botella por Teorema de Hall",
+        fn: () => {
+          const names = ['Alejandro', 'Beatriz', 'Carlos', 'David', 'Elena'];
+          const excl = {
+            'David': ['Alejandro', 'Beatriz', 'Elena'],
+            'Elena': ['Alejandro', 'Beatriz', 'David']
+          };
+          const res = checkSolvability(names, excl);
+          if (res.solvable) throw new Error("Debe detectar irresolubilidad");
+          if (!res.error.includes("Conflicto de exclusión irresoluble")) throw new Error("Mensaje explicativo ausente");
+        }
+      },
+      {
+        name: "Suite 4: Roundtrip de codificación/decodificación con UTF-8 y emojis",
+        fn: () => {
+          const g = "Álvaro Íñigo López";
+          const r = "María José Peña 🚀🎄";
+          const tok = encodePayload(g, r, "1º Máster Teleco", "15 €", "20 Dic");
+          const dec = decodePayload(tok);
+          if (!dec.success) throw new Error(dec.error);
+          if (dec.giver !== g || dec.receiver !== r || dec.budget !== "15 €") throw new Error("Discrepancia en datos");
+        }
+      },
+      {
+        name: "Suite 4: Rechazo determinista de tokens manipulados / bit-flipped",
+        fn: () => {
+          const tok = encodePayload("Carlos", "Beatriz");
+          const chars = tok.split('');
+          chars[chars.length - 1] = chars[chars.length - 1] === 'A' ? 'B' : 'A';
+          const dec = decodePayload(chars.join(''));
+          if (dec.success) throw new Error("Token manipulado fue aceptado indebidamente");
+        }
+      },
+      {
+        name: "Suite 5: Caso límite N=3 con 1 exclusión (solución única determinista)",
+        fn: () => {
+          const names = ['X', 'Y', 'Z'];
+          const excl = { 'X': ['Y'] };
+          const draw = generateDerangement(names, excl);
+          if (draw['X'] !== 'Z' || draw['Z'] !== 'Y' || draw['Y'] !== 'X') {
+            throw new Error("Solución determinista no coincide");
+          }
+        }
+      },
+      {
+        name: "Suite 5: Rendimiento de escala N=50 en menos de 100 ms",
+        fn: () => {
+          const names50 = Array.from({ length: 50 }, (_, i) => `Estudiante_${i}`);
+          const t0 = performance.now();
+          const draw = generateDerangement(names50, {});
+          const elapsed = performance.now() - t0;
+          if (Object.keys(draw).length !== 50) throw new Error("Asignación incompleta");
+          if (elapsed >= 100) throw new Error(`Tiempo excesivo: ${elapsed.toFixed(1)}ms`);
+        }
+      }
+    ];
+
+    // Run tests in sequence
+    let passed = 0;
+    let failed = 0;
+    const logContainer = document.getElementById('results-log');
+
+    tests.forEach((t, index) => {
+      const card = document.createElement('div');
+      card.className = "flex items-center justify-between p-3 rounded-xl border text-xs transition-all";
+      try {
+        t.fn();
+        passed++;
+        card.classList.add('bg-emerald-950/40', 'border-emerald-500/30', 'text-emerald-200');
+        card.innerHTML = `<span>✔ ${t.name}</span><span class="text-emerald-400 font-bold uppercase">PASS</span>`;
+      } catch (err) {
+        failed++;
+        card.classList.add('bg-rose-950/40', 'border-rose-500/30', 'text-rose-200');
+        card.innerHTML = `<div><span class="font-bold">✖ ${t.name}</span><p class="text-rose-400 text-[11px] mt-0.5">${err.message}</p></div><span class="text-rose-400 font-bold uppercase">FAIL</span>`;
+      }
+      logContainer.appendChild(card);
+    });
+
+    // Update stats
+    document.getElementById('stat-total').textContent = tests.length;
+    document.getElementById('stat-passed').textContent = passed;
+    document.getElementById('stat-failed').textContent = failed;
+    const pct = Math.round((passed / tests.length) * 100);
+    document.getElementById('progress-bar').style.width = `${pct}%`;
+
+    const badge = document.getElementById('status-badge');
+    if (failed === 0) {
+      badge.textContent = `100% Superado (${passed}/${tests.length})`;
+      badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
+    } else {
+      badge.textContent = `${failed} Fallos`;
+      badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/40";
+    }
+  </script>
+</body>
+</html>
